@@ -1,0 +1,9 @@
+transformers
+datasets
+einops
+torch
+tqdm
+pandas
+scikit-learn
+pytest-timeit
+matplotlib
