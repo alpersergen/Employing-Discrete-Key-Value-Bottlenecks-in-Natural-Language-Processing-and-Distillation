@@ -2,6 +2,9 @@ import torch
 from torch import nn, einsum
 import torch.nn.functional as F
 from einops import rearrange, repeat
+from datasets import load_dataset
+from torch.utils.data import Dataset, DataLoader
+
 MAX_LEN = 512
 n_labels = 2
 num_epochs = 5
@@ -10,44 +13,46 @@ TEST_BATCH_SIZE = 16
 VALID_BATCH_SIZE = 16
 LEARNING_RATE = 1e-5
 TEMPERATURE = 1.0
+batch_size = TRAIN_BATCH_SIZE
 
 
-dataset = load_dataset("glue", "sst2")
+dataset = load_dataset("glue", "cola")
 
 class CustomDataset(Dataset):
-     def __init__(self, dataframe, tokenizer, max_len):
-         self.tokenizer = tokenizer
-         self.text = dataframe['sentence']
-         self.targets = dataframe['label']
-         self.max_len = max_len
 
-     def __len__(self):
-         return len(self.text)
+    def __init__(self, dataframe, tokenizer, max_len):
+        self.tokenizer = tokenizer
+        self.text = dataframe['sentence']#dataframe.sentence
+        self.targets = dataframe['label']
+        self.max_len = max_len
 
-     def __getitem__(self, index):
-         text = str(self.text[index])
-         text = " ".join(text.split())
+    def __len__(self):
+      return len(self.text)
 
-         inputs = self.tokenizer.encode_plus(
-             text,
-             None,
-             add_special_tokens=True,
-             max_length=self.max_len,
-             truncation=True,
-             padding='max_length',
-             return_token_type_ids=True
-         )
-         ids = inputs['input_ids']
-         mask = inputs['attention_mask']
-         token_type_ids = inputs['token_type_ids']
+    def __getitem__(self, index):
+        text = str(self.text[index])
+        text = " ".join(text.split())
 
-         return {
-             'ids': torch.tensor(ids, dtype=torch.long),
-             'mask': torch.tensor(mask, dtype=torch.long),
-             'token_type_ids': torch.tensor(token_type_ids, dtype=torch.long),
-             'targets': torch.tensor(self.targets[index], dtype=torch.long)
-         }
+        inputs = self.tokenizer.encode_plus(
+            text,
+            None,
+            add_special_tokens=True,
+            max_length=self.max_len,
+            truncation=True,
+            padding='max_length',
+            #pad_to_max_length=True,
+            return_token_type_ids=True
+        )
+        ids = inputs['input_ids']
+        mask = inputs['attention_mask']
+        token_type_ids = inputs["token_type_ids"]
 
+        return {
+            'ids': torch.tensor(ids, dtype=torch.long),
+            'mask': torch.tensor(mask, dtype=torch.long),
+            'token_type_ids': torch.tensor(token_type_ids, dtype=torch.long),
+            'targets': torch.tensor(self.targets[index], dtype=torch.long)
+        }
 def empty_init(*shape):
     #return torch.empty(shape)
     t = torch.empty(shape)
@@ -155,7 +160,7 @@ class DiscreteKeyValueBottleneck(nn.Module):
         decoder = None,
         pool_before = False,
         pooling_type = "cls",
-        n_labels = 1,
+        n_labels = n_labels,
         **kwargs
     ):
         super().__init__()
@@ -359,9 +364,7 @@ from tqdm import tqdm, trange
 
 import pandas as pd
 from transformers import BertTokenizer
-from torch.utils.data import Dataset, DataLoader
 from transformers import AdamW
-from datasets import load_dataset
 import torch
 device = 'cuda' if cuda.is_available() else 'cpu'
 
@@ -392,8 +395,8 @@ def get_Slogits(model, ids, mask):
 
   return last_hidden_state
 # Load the teacher and student models
-teacher_model = BERTwithBottleNeck(n_labels = 2,pooling_type='mean',pool_before=False).to(device)
-student_model = DistilBERTwithBottleNeck(n_labels = 2,pooling_type='mean',pool_before=False).to(device)
+teacher_model = BERTwithBottleNeck(n_labels = n_labels,pooling_type='mean',pool_before=False).to(device)
+student_model = DistilBERTwithBottleNeck(n_labels = n_labels,pooling_type='mean',pool_before=False).to(device)
 
 # Print the network architectures
 print("Teacher Model:")
@@ -437,8 +440,6 @@ validation_set = CustomDataset(valid_dataset, tokenizer, MAX_LEN)
 testing_set = CustomDataset(test_dataset, tokenizer, MAX_LEN)
 
 
-n_labels = 2
-batch_size = 1
 
 train_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(validation_set, batch_size=batch_size, shuffle=True)
