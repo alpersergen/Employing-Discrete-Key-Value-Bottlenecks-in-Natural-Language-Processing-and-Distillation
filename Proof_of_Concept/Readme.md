@@ -31,9 +31,7 @@ The model's performance is evaluated on the validation set using metrics such as
 5. Evaluation: Evaluate the trained student model on the validation set and select the best-performing model for testing.
 6. Test: Test the final model on the test dataset to measure its accuracy.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Happy experimenting with the bottleneck distillation model with key carrying! If you have any questions or suggestions, please don't hesitate to reach out.
 
 ## Acknowledgments
 

@@ -36,9 +36,7 @@ To use this code for distillation from BERT Base to DistilBERT with Discrete Key
 3. Train the Student Model: Run the training loop to distill knowledge from the BERT Base teacher model to the DistilBERT student model. Adjust hyperparameters such as batch size, learning rate, and number of epochs as needed.
 4. Evaluate the Student Model: Evaluate the performance of the student model on the validation set using F1 Score, MCC, and accuracy metrics.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Happy experimenting with the bottleneck distillation model with key carrying! If you have any questions or suggestions, please don't hesitate to reach out.
 
 ## Acknowledgments
 
