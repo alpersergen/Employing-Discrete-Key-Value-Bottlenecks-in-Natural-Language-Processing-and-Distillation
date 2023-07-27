@@ -4,7 +4,7 @@ This repository contains implementations of various knowledge distillation model
 
 ## Proof of Concept Models
 
-1. [Proof of Concept](https://github.com/alpersergen/Thesis_Repo/blob/main/Proof_of_Concept/Readme.md): This markdown file showcases the initial proof of concept for the DiscreteKeyValueBottleneck model. It demonstrates how the model can be used to compress the embeddings from a teacher model (BERT Base) and optimize the keys using an exponential moving average (EMA) algorithm.
+1. [Proof of Concept](https://github.com/alpersergen/Thesis_Repo/blob/main/Proof_of_Concept/Readme.md): This markdown file showcases the initial proof of concept for the DiscreteKeyValueBottleneck model. It demonstrates how the model can be used to compress the embeddings from a teacher model  and optimize the keys using an exponential moving average (EMA) algorithm.
 
 2. [Distillation with Key Carried](https://github.com/alpersergen/Thesis_Repo/blob/main/Bottleneck_Distillation_Keys_Carried/Readme.md): This markdown file presents a bottleneck distillation model where keys are carried over from the teacher(BERT with Discrete Key Value Bottleneck) to the student model(DistilBERT with Discrete Key-Value Bottleneck). It includes code for loading and preprocessing the MNIST dataset, training the student model, and optimizing the keys during the knowledge distillation process.
 
