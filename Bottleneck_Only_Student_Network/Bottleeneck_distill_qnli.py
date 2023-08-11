@@ -12,6 +12,7 @@ TRAIN_BATCH_SIZE = 16
 TEST_BATCH_SIZE = 16
 VALID_BATCH_SIZE = 16
 LEARNING_RATE = 1e-5
+LEARNING_RATE2= 2e-5
 TEMPERATURE = 1.0
 
 glue_metric = load('glue', 'qnli')
@@ -460,8 +461,10 @@ test_loader = DataLoader(testing_set, batch_size=batch_size, shuffle=True)
 # test_data_loader = create_data_loader(test_dataset, TEST_BATCH_SIZE)
 
 # Define the optimizer and loss function
-optimizer = AdamW(student_model.parameters(), lr=LEARNING_RATE)
-
+optimizer = AdamW([
+    {'params': student_model.enc_with_bottleneck.parameters(), 'lr': LEARNING_RATE},
+    {'params': student_model.l3.parameters(), 'lr': LEARNING_RATE2}
+], lr=LEARNING_RATE)
 def distillation_loss(y_student, y_teacher, labels, temperature):
     soft_targets = F.softmax(y_teacher / temperature, dim=1)
     log_probs = F.log_softmax(y_student / temperature, dim=1)
