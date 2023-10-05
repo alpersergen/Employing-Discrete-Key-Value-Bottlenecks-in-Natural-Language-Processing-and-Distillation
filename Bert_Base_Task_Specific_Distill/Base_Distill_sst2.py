@@ -54,13 +54,13 @@ wandb.init(
     config={
     "learning_rate": 3e-5,
     "architecture": "Bottleneck with base networks only distilation",
-    "dataset": "rte",
+    "dataset": "sst2",
     "epochs": 100,
     }
 )
 
 # Load RTE dataset
-dataset = load_dataset("glue", "rte")
+dataset = load_dataset("glue", "sst2")
 train_dataset = dataset["train"]
 val_dataset = dataset["validation"]
 val_data = dataset["validation"]
@@ -76,44 +76,40 @@ LEARNING_RATE2= 0.1
 TEMPERATURE = 1.0
 
 num_classes =  n_labels # Binary classification (entailment vs. non-entailment)
-
 class CustomDataset(Dataset):
+     def __init__(self, dataframe, tokenizer, max_len):
+         self.tokenizer = tokenizer
+         self.text = dataframe['sentence']
+         self.targets = dataframe['label']
+         self.max_len = max_len
 
-    def __init__(self, dataframe, tokenizer, max_len):
-        self.tokenizer = tokenizer
-        self.text1 = dataframe['sentence1']#dataframe.sentence
-        self.text2 = dataframe['sentence2']
-        self.targets = dataframe['label']
-        self.max_len = max_len
+     def __len__(self):
+         return len(self.text)
 
-    def __len__(self):
-      return len(self.text1) 
+     def __getitem__(self, index):
+         text = str(self.text[index])
+         text = " ".join(text.split())
 
-    def __getitem__(self, index):
-        text1 = str(self.text1[index])
-        text1 = " ".join(text1.split())
-        text2 = str(self.text2[index])
-        text2 = " ".join(text2.split())
+         inputs = self.tokenizer.encode_plus(
+             text,
+             None,
+             add_special_tokens=True,
+             max_length=self.max_len,
+             truncation=True,
+             padding='max_length',
+             return_token_type_ids=True
+         )
+         ids = inputs['input_ids']
+         mask = inputs['attention_mask']
+         token_type_ids = inputs['token_type_ids']
 
-        inputs = self.tokenizer.encode_plus(
-            text1,
-            text2,
-            add_special_tokens=True,
-            max_length=self.max_len,
-            truncation=True,
-            pad_to_max_length=True,
-            return_token_type_ids=True
-        )
-        ids = inputs['input_ids']
-        mask = inputs['attention_mask']
-        token_type_ids = inputs["token_type_ids"]
+         return {
+             'ids': torch.tensor(ids, dtype=torch.long),
+             'mask': torch.tensor(mask, dtype=torch.long),
+             'token_type_ids': torch.tensor(token_type_ids, dtype=torch.long),
+             'targets': torch.tensor(self.targets[index], dtype=torch.long)
+         }
 
-        return {
-            'input_ids': torch.tensor(ids, dtype=torch.long),
-            'attention_mask': torch.tensor(mask, dtype=torch.long),
-            'token_type_ids': torch.tensor(token_type_ids, dtype=torch.long),
-            'targets': torch.tensor(self.targets[index], dtype=torch.long)
-        }
 train_data = CustomDataset(train_dataset, tokenizer, MAX_LEN)
 val_data = CustomDataset(val_dataset, tokenizer, MAX_LEN)
 

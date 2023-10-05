@@ -54,13 +54,13 @@ wandb.init(
     config={
     "learning_rate": 3e-5,
     "architecture": "Bottleneck with base networks only distilation",
-    "dataset": "rte",
+    "dataset": "mrpc",
     "epochs": 100,
     }
 )
 
 # Load RTE dataset
-dataset = load_dataset("glue", "rte")
+dataset = load_dataset("glue", "mrpc")
 train_dataset = dataset["train"]
 val_dataset = dataset["validation"]
 val_data = dataset["validation"]
@@ -76,7 +76,6 @@ LEARNING_RATE2= 0.1
 TEMPERATURE = 1.0
 
 num_classes =  n_labels # Binary classification (entailment vs. non-entailment)
-
 class CustomDataset(Dataset):
 
     def __init__(self, dataframe, tokenizer, max_len):
@@ -109,8 +108,8 @@ class CustomDataset(Dataset):
         token_type_ids = inputs["token_type_ids"]
 
         return {
-            'input_ids': torch.tensor(ids, dtype=torch.long),
-            'attention_mask': torch.tensor(mask, dtype=torch.long),
+            'ids': torch.tensor(ids, dtype=torch.long),
+            'mask': torch.tensor(mask, dtype=torch.long),
             'token_type_ids': torch.tensor(token_type_ids, dtype=torch.long),
             'targets': torch.tensor(self.targets[index], dtype=torch.long)
         }

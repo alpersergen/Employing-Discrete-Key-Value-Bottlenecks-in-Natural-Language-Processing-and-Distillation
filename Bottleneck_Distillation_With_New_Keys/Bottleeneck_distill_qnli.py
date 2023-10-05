@@ -5,16 +5,31 @@ from einops import rearrange, repeat
 from datasets import load_dataset
 from torch.utils.data import Dataset, DataLoader
 from evaluate import load
+import wandb
+wandb.login(key="a6d93dd680e09e7dddae91cf4cf664991f59025f")
+
+wandb.init(
+    # set the wandb project where this run will be logged
+    project="Bottleneck Distillation Keys not Carried",
+
+    # track hyperparameters and run metadata
+    config={
+    "learning_rate": 3e-5,
+    "architecture": "Bottleneck",
+    "dataset": "QNLI",
+    "epochs": 100,
+    }
+)
 MAX_LEN = 512
 n_labels = 3
 num_epochs = 5
-TRAIN_BATCH_SIZE = 16
-TEST_BATCH_SIZE = 16
-VALID_BATCH_SIZE = 16
-LEARNING_RATE = 1e-5
-LEARNING_RATE2= 2e-5
+TRAIN_BATCH_SIZE = 32
+TEST_BATCH_SIZE = 32
+VALID_BATCH_SIZE = 32
+LEARNING_RATE = 3e-5
+LEARNING_RATE2= 0.1
 TEMPERATURE = 1.0
-
+batch_size= TRAIN_BATCH_SIZE
 glue_metric = load('glue', 'qnli')
 dataset = load_dataset("glue", "qnli")
 class CustomDataset(Dataset):
@@ -528,7 +543,8 @@ for epoch in train_iterator:
         # Collect true and predicted labels for evaluation
         y_true.extend(targets.cpu().numpy())
         y_pred.extend(torch.argmax(student_logits, dim=1).cpu().numpy())
-    
+        wandb.log({"train_loss": train_loss, "epoch": epoch+1})
+
     # Evaluate the student model on the validation set
     student_model.eval()
     with torch.no_grad():
@@ -550,12 +566,13 @@ for epoch in train_iterator:
             y_pred.extend(torch.argmax(student_logits, dim=1).cpu().numpy())
 
 
-    glue_metric = glue_compute_metrics("qnli", predicted_labels=y_pred, labels=y_true)
+    # glue_metric = glue_compute_metrics("qnli", predicted_labels=y_pred, labels=y_true)
     val_loss /= num_val_steps
     f1 = f1_score(y_true, y_pred, average='macro')
     mcc = matthews_corrcoef(y_true, y_pred)
     acc = accuracy_score(y_true, y_pred)
-    
+    wandb.log({"f1_score": f1, "epoch": epoch+1})
+    wandb.log({"acc_score": acc, "epoch": epoch+1})
     print('Epoch {} - train_loss: {:.4f}, val_loss: {:.4f}'.format(epoch + 1, train_loss, val_loss))
     print('F1 Score: {:.4f}, Matthews Corrcoef: {:.4f}, Accuracy: {:.4f}'.format(f1, mcc, acc))
-    print('Glue Metric Score:',glue_metric)
+    # print('Glue Metric Score:',glue_metric)

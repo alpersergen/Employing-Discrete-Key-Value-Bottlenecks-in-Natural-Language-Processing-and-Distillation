@@ -54,20 +54,20 @@ wandb.init(
     config={
     "learning_rate": 3e-5,
     "architecture": "Bottleneck with base networks only distilation",
-    "dataset": "rte",
+    "dataset": "mnli",
     "epochs": 100,
     }
 )
 
 # Load RTE dataset
-dataset = load_dataset("glue", "rte")
+dataset = load_dataset("glue", "mnli")
 train_dataset = dataset["train"]
 val_dataset = dataset["validation"]
 val_data = dataset["validation"]
 # Initialize tokenizer and constants
 tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
 MAX_LEN = 512
-n_labels = 2
+n_labels = 3
 num_epochs = 5
 TRAIN_BATCH_SIZE = 32
 VALID_BATCH_SIZE = 32
@@ -81,13 +81,13 @@ class CustomDataset(Dataset):
 
     def __init__(self, dataframe, tokenizer, max_len):
         self.tokenizer = tokenizer
-        self.text1 = dataframe['sentence1']#dataframe.sentence
-        self.text2 = dataframe['sentence2']
+        self.text1 = dataframe['premise']#dataframe.sentence
+        self.text2 = dataframe['hypothesis']
         self.targets = dataframe['label']
         self.max_len = max_len
 
     def __len__(self):
-      return len(self.text1) 
+         return len(self.text1)
 
     def __getitem__(self, index):
         text1 = str(self.text1[index])
@@ -109,8 +109,8 @@ class CustomDataset(Dataset):
         token_type_ids = inputs["token_type_ids"]
 
         return {
-            'input_ids': torch.tensor(ids, dtype=torch.long),
-            'attention_mask': torch.tensor(mask, dtype=torch.long),
+            'ids': torch.tensor(ids, dtype=torch.long),
+            'mask': torch.tensor(mask, dtype=torch.long),
             'token_type_ids': torch.tensor(token_type_ids, dtype=torch.long),
             'targets': torch.tensor(self.targets[index], dtype=torch.long)
         }
